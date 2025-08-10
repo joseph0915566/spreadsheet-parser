@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.joseph'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    //third party
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
+    implementation 'software.amazon.awssdk:s3:2.19.17'
+    implementation 'com.github.spullara.mustache.java:compiler:0.9.10'
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.5.2'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.19.2'
+    implementation 'io.micrometer:micrometer-registry-datadog:1.14.9'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}

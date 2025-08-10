@@ -1,0 +1,67 @@
+input {
+    text-align: right;
+}
+
+div.progressbar-table {
+    margin-top: 10px;
+    display: flex;
+    flex-flow: row wrap;
+}
+
+div.progressbar-section {
+    width: 6.5%;
+    height: 50px;
+    margin-left: 3px;
+    display: flex;
+    flex-direction: column;
+}
+
+div.progressbar-caption {
+    width: 95%;
+    display: flex;
+    flex-direction: row;
+}
+
+div.progressbar-part {
+    padding-left: 10px;
+    width: 50%;
+    font-weight: 900;
+}
+
+div.progressbar-retry {
+    width: 40%;
+    text-align: right;
+    font-weight: 900;
+}
+
+div.progressbar-container {
+    width: 95%;
+    border: 3px solid gray;
+    position:relative;
+    height: 16px;
+    border-radius: 12px;
+}
+
+div.progressbar-meter {
+    position:absolute;
+    top: 2px;
+    left: 2px;
+    height: 12px;
+    background-color: lightskyblue; /*lime tomato*/
+    border-radius: 12px;
+}
+
+div.progressbar-text {
+    position:absolute;
+    top: 2px;
+    left: 2px;
+    width: 100%;
+    text-align: center;
+    font-weight: 1000;
+    z-index: 9999;
+    color: black;
+}
+
+div.text {
+    font-size: 12px;
+}

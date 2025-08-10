@@ -1,0 +1,11 @@
+Hi team,
+
+This is a notification that a new Company Matching result is ready for download at
+
+{{{url}}}
+
+This link will expire in {{day}} days.
+
+Regards,
+
+Spreadsheet Parser Application

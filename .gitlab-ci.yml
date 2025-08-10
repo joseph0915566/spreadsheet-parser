@@ -1,0 +1,127 @@
+include:
+  - project: "pipeline/gitlab-pipeline"
+    file:
+      - /templates/java-project.yml
+      - /templates/arc-resolver-deploy.yml
+      - /templates/releases.yml
+  - project: "test-result-relay/test-result-relay-gitlab-ci"
+    ref: master
+    file: ".trr-gitlab-ci.yml"
+
+variables:
+  QA_DEPLOY_LABELS: "qa-jenkins-latest"
+  PROD_DEPLOY_LABELS: "prod-jenkins-latest"
+  PROD_ROLLBACK: "false"
+  PROD_DD_MONITOR_FILE: "" # when set to a non-empty value, datadog analysis will be performed on the monitors added to this file in the validation steps.
+  PROD_CUSTOM_VALIDATIONS_FILE: "" # when set to a non-empty value, jobs in this file will be added to the prod deploy validations.
+  ENABLE_TRR: "true"
+
+# Run a branch pipeline unless a merge request is open, then run a MR pipeline
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+default:
+  tags: [shared-pure]
+
+stages:
+  - test
+  - build
+  - upload
+  - qa
+  - qa-verify
+  - prod
+  - prod-verify
+  - release
+
+Unit Tests:
+  extends: [.gradle-build, .trr]
+  stage: test
+  interruptible: true
+  script:
+    - if [ -f gradlew ]; then GRADLE=./gradlew; else GRADLE=gradle; fi
+    - if [[ "$HAS_LIBRARY" =~ ^(1|true)$ ]]; then SKIPBIN="-x binaryCompatibilityCheck"; else SKIPBIN=""; fi
+    - $GRADLE check $SKIPBIN
+
+Build Deployable:
+  extends: .gradle-build
+  stage: build
+  interruptible: true
+  needs:
+    - Unit Tests
+  script:
+    - if [ -f gradlew ]; then GRADLE=./gradlew; else GRADLE=gradle; fi
+    - $GRADLE clean build -x check
+
+Upload to Arc:
+  extends: .upload-to-arc
+  stage: upload
+  variables:
+    LABELS: lemma-jenkins-latest
+    FILE_TO_UPLOAD: $GRADLE_BUILD_DIR/dist/dist.tar.gz
+    UPLOADED_VERSION_FILE: $GRADLE_BUILD_DIR/arc-version.env
+  needs:
+    - Build Deployable
+
+Deploy to QA:
+  variables:
+    GIT_STRATEGY: none
+    LABELS: $QA_DEPLOY_LABELS
+  extends: .marvin-qa-deploy-after-upload
+  stage: qa
+  needs:
+    - Upload to Arc
+  rules:
+    - if: $CI_COMMIT_REF_NAME =~ /^jira\/TBIZ-/
+  environment:
+    name: qa
+    url: $QA_DEPLOY_URL
+
+Check QA Healthcheck:
+  extends: .check-health-check-qa
+  stage: qa-verify
+  needs:
+    - Deploy to QA
+  variables:
+    MT_DEPLOY_LABELS: $QA_DEPLOY_LABELS
+  rules:
+    - if: $CI_COMMIT_REF_NAME =~ /^jira\/TBIZ-/
+
+Deploy to Prod:
+  variables:
+    GIT_STRATEGY: none
+    LABELS: $PROD_DEPLOY_LABELS
+  extends: .marvin-prod-deploy
+  stage: prod
+  needs:
+    - Upload to Arc
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: false
+  environment:
+    name: prod
+    url: $PROD_DEPLOY_URL
+
+Validate Prod and Rollback:
+  extends: .validate-and-rollback
+  stage: prod-verify
+  variables:
+    MT_DEPLOY_LABELS: $PROD_DEPLOY_LABELS
+    MARVIN_API: https://marvin.tech
+    ROLLBACK_DEPLOY: $PROD_ROLLBACK
+    DD_MONITOR_FILE: $PROD_DD_MONITOR_FILE
+    CUSTOM_DEPLOY_VALIDATION_FILE: $PROD_CUSTOM_VALIDATIONS_FILE
+  needs:
+    - Deploy to Prod
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+
+Create Deployable Release:
+  extends: .create-deployable-release
+  stage: release
+  needs:
+    - job: Deploy to Prod
+      artifacts: false
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH

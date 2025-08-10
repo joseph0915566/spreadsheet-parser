@@ -1,0 +1,143 @@
+poodlepants.redirect-root: false
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.mongo.MongoMetricsAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+  jackson:
+    default-property-inclusion: NON_NULL
+
+---
+app:
+  title: spreadsheet-parser
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: env-local
+http.monitor.port: 8080
+
+aws:
+  s3:
+    bucket:
+      name: spreadsheet-parser-qa
+    workercount: 10
+    download:
+      url-expiry-day: 5
+    upload:
+      url-expiry-hour: 2
+    select:
+      retry:
+        delay: 5000
+        count: 100
+  access:
+    key: access
+  secret:
+    key: secret
+  region: us-west-1
+
+3po:
+  hostname: localhost:8080
+  batchsize: 100
+  workercount: 20
+  retry:
+    delay: 30000
+    count: 2400
+  timeout:
+    request: 300000
+
+mail:
+  default-sender: spreadsheet-parser@gmail.com
+  default-subject: Company Matching Result Ready for Download
+  template-location: templates/email/ready_for_download.txt
+  npub:
+    content-type: company_matching_ready_for_download
+---
+
+spring:
+  config:
+    activate:
+      on-profile: env-qa
+
+aws:
+  s3:
+    bucket:
+      name: spreadsheet-parser-qa
+    workercount: 30
+    download:
+      url-expiry-day: 5
+    upload:
+      url-expiry-hour: 2
+    select:
+      retry:
+        delay: 5000
+        count: 100
+  access:
+    key: ${spreadsheet-parser.qa.access_key}
+  secret:
+    key: ${spreadsheet-parser.qa.secret_key}
+  region: ${spreadsheet-parser.qa.region}
+
+3po:
+  hostname: https://3po.sandbox.qa.net
+  batchsize: 200
+  workercount: 30
+  retry:
+    delay: 30000
+    count: 2400
+  timeout:
+    request: 300000
+
+
+mail:
+  default-sender: spreadsheet-parser@gmail.com
+  default-subject: Company Matching Result Ready for Download
+  template-location: templates/email/ready_for_download.txt
+  npub:
+    content-type: company_matching_ready_for_download
+---
+
+spring:
+  config:
+    activate:
+      on-profile: env-prod
+
+aws:
+  s3:
+    bucket:
+      name: spreadsheet-parser-prod
+    workercount: 30
+    download:
+      url-expiry-day: 5
+    upload:
+      url-expiry-hour: 2
+    select:
+      retry:
+        delay: 20000
+        count: 3600
+  access:
+    key: ${spreadsheet-parser.prod.access_key}
+  secret:
+    key: ${spreadsheet-parser.prod.secret_key}
+  region: ${spreadsheet-parser.prod.sqs.region}
+
+3po:
+  hostname: https://3po.sandbox.net
+  batchsize: 200
+  workercount: 30
+  retry:
+    delay: 30000
+    count: 2400
+  timeout:
+    request: 300000
+
+
+mail:
+  default-sender: spreadsheet-parser.prod@gmail.com
+  default-subject: Company Matching Result Ready for Download
+  template-location: templates/email/ready_for_download.txt
+  npub:
+    content-type: company_matching_ready_for_download
