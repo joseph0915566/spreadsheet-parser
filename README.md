@@ -8,4 +8,6 @@ chunk will be uploaded concurrently with 3 retries each chunk. Once upload is co
 start parsing the rows concurrently using S3 SELECT to speed up processing. Once all parsing is done, server will
 prepare an S3 download URL and email that to you.
 
-For frontend, I'm using Vue.js
+Tech stack:
+* Frontend : Vue 3, JS promise, JS generator, Web Worker API, Pinia
+* Backend : Java, S3 Multipart Upload, S3 SELECT, Spring Boot, Datadog
