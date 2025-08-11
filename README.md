@@ -7,3 +7,5 @@ Your file will be uploaded in chunks directly to S3 from your device. The file w
 chunk will be uploaded concurrently with 3 retries each chunk. Once upload is complete, server will immediately
 start parsing the rows concurrently using S3 SELECT to speed up processing. Once all parsing is done, server will
 prepare an S3 download URL and email that to you.
+
+For frontend, I'm using Vue.js
